@@ -1,0 +1,287 @@
+openapi: 3.1.0
+info:
+  title: Travelgram
+  version: 0.1.0
+
+components:
+  schemas:
+    PostCreate:
+      type: object
+      required: [file, user_id, place_id, description]
+      properties:
+        file:
+          type: string
+          format: binary
+        place_id:
+          type: integer
+        description:
+          type: string
+    PostResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        place_id:
+          type: integer
+        description:
+          type: string
+        created_at:
+          type: integer
+          description: timestamp
+    CommentResponse:
+      type: object
+      properties:
+        post_id:
+          type: integer
+        user_id:
+          type: integer
+        text:
+          type: string
+        created_at:
+          type: integer
+    CommentCreate:
+      type: object
+      properties:
+        text:
+          type: string
+    LocationResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        details:
+          type: object
+    Cursor:
+      type: string
+      examples: ['base64...']
+
+paths:
+  /posts:
+    post:
+      tags:
+        - posts
+      summary: Create post
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+
+      responses:
+        '201':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                required: [id]
+                $ref: '#/components/schemas/PostResponse'
+        '400':
+          description: Bad request
+        '422':
+          description: Validation exception
+        default:
+          description: Unexpected error
+    get:
+      tags:
+        - posts
+      summary: Get posts
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cursor:
+                    $ref: '#/components/schemas/Cursor'
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PostResponse'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /posts/{id}/likes:
+    put:
+      summary: Like a post
+      tags:
+        - posts
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ok
+        '404':
+          description: post not found
+    delete:
+      summary: Delete like from post
+      tags:
+        - posts
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ok
+        '404':
+          description: post not found
+    get:
+      summary: Get post likes
+      tags:
+        - posts
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cursor:
+                    $ref: '#/components/schemas/Cursor'
+                  user_ids:
+                    type: array
+                    schema:
+                      type: integer
+        '404':
+          description: post not found
+  /posts/{id}/comments:
+    post:
+      tags:
+        - posts
+      summary: Create a comment to the post
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+              schema:
+                $ref: '#/components/schemas/CommentCreate'
+    get:
+      tags:
+        - posts
+      summary: Get list of comments
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cursor:
+                    $ref: '#/components/schemas/Cursor'
+                  comments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommentResponse'
+        '404':
+          description: post not found
+
+  /subscriptions:
+    post:
+      tags:
+        - subscriptions
+      summary: Subscribe to a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                followee_user_id:
+                  type: integer
+                  format: integer
+    get:
+      tags:
+        - subscriptions
+      summary: Get user subscriptions
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                properties:
+                  subscriptions:
+                    type: array
+                    items:
+                      type: integer
+  /locations:
+    get:
+      tags:
+        - locations
+      summary: Get list of locations
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+            nullable: true
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                properties:
+                  cursor:
+                    $ref: '#/components/schemas/Cursor'
+                  locations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LocationResponse'
