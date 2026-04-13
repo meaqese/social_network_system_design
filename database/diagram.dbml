@@ -1,0 +1,50 @@
+Table Users {
+  id bigint [pk]
+  username varchar(50)
+  email varchar(255)
+  password_hash varchar(100)
+  created_at datetime
+}
+
+
+Table Posts {
+  id bigint [pk]
+  user_id bigint [ref: > Users.id]
+  place_id int [ref: > Places.id]
+  description varchar(400)
+  created_at datetime
+}
+
+Table Media {
+  id bigint [pk]
+  post_id bigint [ref: > Posts.id]
+  order int
+  blob_key varchar(200)
+}
+
+Table Likes {
+  id bigint [pk]
+  post_id bigint [unique]
+  user_id bigint [unique, ref: > Users.id]
+  created_at datetime
+}
+
+Table Follows {
+  followee_id bigint [pk, ref: > Users.id]
+  follower_id bigint [pk, ref: > Users.id]
+  created_at datetime
+}
+
+Table Comments {
+  id bigint [pk]
+  post_id bigint [ref: > Posts.id]
+  user_id bigint [ref: > Users.id]
+  text text
+  created_at datetime
+}
+
+Table Places {
+  id bigint [pk]
+  name varchar(50)
+  blob_key varchar(200)
+}
