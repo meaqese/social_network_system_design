@@ -20,6 +20,9 @@ Table Media {
   post_id bigint [ref: > Posts.id]
   order int
   blob_key varchar(200)
+  geo_point geography(Point) [null]
+
+  Note: "geo_point грузится по умолчанию через EXIF, но пользователь может подкорректировать"
 }
 
 Table Likes {
