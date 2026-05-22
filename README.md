@@ -58,43 +58,46 @@
 
 ## Модель данных:
 
-Пост ~ 0.5KB:
+Post ~ 0.5KB:
 - id - 8B
 - user_id - 8B
-- place_id - 8B
+- place_id - 4B
 - description - 400B
 - created_at - 8B
 
-Фото ~ 0.1KB
+Media ~ 120B
 - id - 8B
 - post_id - 8B
+- order - 4B
 - url - 100B
 
-Лайки ~ 24B
+Likes ~ 32B
 - id - 8B
 - post_id - 8B
 - user_id - 8B
+- created_at - 8B
 
-Подписки ~ 16B
+Follow ~ 24B
 - followee_id - 8B
 - follower_id - 8B
+- created_at - 8B
 
-Комментарии ~ 132B
+Comment ~ 132B
 - id - 8B
 - post_id - 8B
 - user_id - 8B
 - text - 100B
 - created_at - 8B
 
-Место ~ 138B
+Place ~ 138B
 - id - 8B
 - name - 30B
-- url - 100B
+- photo_blob_url - 100B
 
 
 
 ## Расчеты RPS:
-- Write
+- Write 
 	- Добавление постов = 450k постов в день / 86400 = 5.2 RPS
 	- Лайки = 36m per day / 86400 = 417 RPS
 	- Комменты = 1.8m per day / 86400 = 21 RPS
@@ -106,23 +109,37 @@
 
 ## Расчеты трафа:
 ### Метаданные:
-- Write
+- Write - (2.6KB/s + 13KB/s + 2.7KB/s + 96B/s = 18.3KB/s) - 447 RPS
 	- Добавление постов = 0.5KB * 5.2 = 2.6KB/s
-	- Лайки = 24B x 417 RPS = 10KB/s
+	- Лайки = 32B x 417 RPS = 13KB/s
 	- Комменты = 132B x 21 RPS = 2.7KB/s
-	- Подписки = 16B x 4 RPS = 64B/s
-- Read
+	- Подписки = 24B x 4 RPS = 96B/s
+- Read - 2MB/s - 213 RPS
 	- Просмотр ленты = 0.5KB x 20 x 208 =~ 2MB/s
-	- Поиск мест (input) = 30B x 4  = 120B
+	- Поиск мест (input) = 30B x 4 = 120B
 	- Лента мест = 138B x 20 x 1.2 = 3.2KB
 
 ## Медиа:
 В среднем фото поста/места весит 300КБ, при добавлении сжимается на клиенте
 
-- Write
+- Write - 1.5MB/s - 5.2 RPS
   - Добавление поста = 300KB * 5.2 RPS = 1.5MB/s
-- Read
+- Read - 1.2GB/s
   - Просмотр ленты = 20 * 300KB * 208 = 1.2GB/s
   - Просмотр ленты мест = 20 * 300KB * 1.2 = 7MB/s
 
 
+# Capacity
+## Metadata
+- 18.3KB/s * 86400 * 365 = 577 108 800KB = 577108MB = 577GB
+## Media (S3)
+- 1.5MB/s * 86400 * 365 = 47 304 000MB = 47304GB = 47.3TB
+
+# Диски
+## Metadata
+447 + 213 RPS = 660 RPS (rw) 
+HDD даже считать не буду - 7 HDD уже звучит не очень
+-> 1TB SSD
+## Media
+Медиа хранятся в стороннем провайдере Yandex S3, требуется хранение ~48ТБ в год, а
+какой диск выбирать это уже решает провайдер
